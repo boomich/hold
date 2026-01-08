@@ -1,4 +1,5 @@
-import { View, ViewProps } from 'react-native';
+import { ViewProps } from 'react-native';
+import { View } from 'uniwind/components';
 
 export const Card = ({ className, ...props }: ViewProps & { className?: string }) => {
   return (

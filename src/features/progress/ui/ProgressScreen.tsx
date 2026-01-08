@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View } from 'uniwind/components';
 import Svg, { Polyline } from 'react-native-svg';
 import { Screen } from '@/shared/ui/Screen';
 import { Card } from '@/shared/ui/Card';

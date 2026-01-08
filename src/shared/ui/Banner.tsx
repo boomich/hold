@@ -1,4 +1,4 @@
-import { View } from 'react-native';
+import { View } from 'uniwind/components';
 import { Text } from '@/shared/ui/Text';
 import { Button } from '@/shared/ui/Button';
 

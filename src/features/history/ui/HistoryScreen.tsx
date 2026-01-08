@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, View } from 'uniwind/components';
 import { format, parseISO } from 'date-fns';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Screen } from '@/shared/ui/Screen';

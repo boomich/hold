@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { TextInput, View } from 'react-native';
+import { TextInput, View } from 'uniwind/components';
 import Slider from '@react-native-community/slider';
 import { useRouter } from 'expo-router';
 import { Card } from '@/shared/ui/Card';

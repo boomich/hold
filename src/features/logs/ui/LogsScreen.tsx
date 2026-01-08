@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FlatList, View } from 'react-native';
+import { FlatList, View } from 'uniwind/components';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Card } from '@/shared/ui/Card';

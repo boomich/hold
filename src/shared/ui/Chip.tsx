@@ -1,4 +1,5 @@
-import { Pressable, PressableProps } from 'react-native';
+import { PressableProps } from 'react-native';
+import { Pressable } from 'uniwind/components';
 import { Text } from '@/shared/ui/Text';
 
 export const Chip = ({
