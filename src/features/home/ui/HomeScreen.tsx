@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { View } from 'uniwind/components';
+import { View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useFocusEffect } from '@react-navigation/native';
 import { Card } from '@/shared/ui/Card';

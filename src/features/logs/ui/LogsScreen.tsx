@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { FlatList, View } from 'uniwind/components';
-import * as FileSystem from 'expo-file-system';
+import { FlatList, View } from 'react-native';
+import { cacheDirectory, documentDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Card } from '@/shared/ui/Card';
 import { Screen } from '@/shared/ui/Screen';
@@ -24,8 +24,12 @@ export const LogsScreen = () => {
     const content = logs
       .map((entry) => `${entry.createdAt} [${entry.level.toUpperCase()}] ${entry.message}`)
       .join('\n');
-    const fileUri = `${FileSystem.cacheDirectory}hold-logs.txt`;
-    await FileSystem.writeAsStringAsync(fileUri, content);
+    const baseDir = cacheDirectory ?? documentDirectory;
+    if (!baseDir) {
+      throw new Error('No writable directory available');
+    }
+    const fileUri = `${baseDir}hold-logs.txt`;
+    await writeAsStringAsync(fileUri, content);
     await Sharing.shareAsync(fileUri, { mimeType: 'text/plain', dialogTitle: 'Export Hold logs' });
   };
 

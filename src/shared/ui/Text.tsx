@@ -1,5 +1,4 @@
-import { TextProps } from 'react-native';
-import { Text as RNText } from 'uniwind/components';
+import { Text as RNText, TextProps } from 'react-native';
 
 const variants = {
   title: 'font-display text-title text-ink',

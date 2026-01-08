@@ -1,5 +1,5 @@
 import { LinearGradient } from 'expo-linear-gradient';
-import { SafeAreaView, ScrollView, View } from 'uniwind/components';
+import { SafeAreaView, ScrollView, View } from 'react-native';
 import { colors } from '@/design/tokens';
 
 export const Screen = ({

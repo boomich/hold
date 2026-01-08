@@ -4,7 +4,10 @@ import { Plan } from '@/features/plan/domain/types';
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
+    // `shouldShowAlert` is deprecated but harmless; keep it for older platforms.
     shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: false,
     shouldSetBadge: false,
   }),
@@ -36,10 +39,10 @@ export const schedulePlanNotifications = async (plan: Plan) => {
         body: 'Evening wash for scalp + beard.',
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.WEEKLY,
         weekday: toExpoWeekday(day),
         hour: eveningTime.hour,
         minute: eveningTime.minute,
-        repeats: true,
       },
     });
   }
@@ -52,9 +55,9 @@ export const schedulePlanNotifications = async (plan: Plan) => {
         body: 'Morning antifungal care.',
       },
       trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
         hour: morningTime.hour,
         minute: morningTime.minute,
-        repeats: true,
       },
     });
   }

@@ -1,6 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Platform } from 'react-native';
-import { Pressable, Switch, View } from 'uniwind/components';
+import { Platform, Pressable, Switch, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';

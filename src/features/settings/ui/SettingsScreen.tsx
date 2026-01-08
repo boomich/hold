@@ -1,10 +1,9 @@
 import { useMemo, useState } from 'react';
-import { Alert, Platform } from 'react-native';
-import { Pressable, Switch, View } from 'uniwind/components';
+import { Alert, Platform, Pressable, Switch, View } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { format } from 'date-fns';
 import { useRouter } from 'expo-router';
-import * as FileSystem from 'expo-file-system';
+import { cacheDirectory, documentDirectory, writeAsStringAsync } from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import { Button } from '@/shared/ui/Button';
 import { Card } from '@/shared/ui/Card';
@@ -80,8 +79,12 @@ export const SettingsScreen = () => {
         checkIns,
         exportedAt: new Date().toISOString(),
       };
-      const fileUri = `${FileSystem.cacheDirectory}hold-export.json`;
-      await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(payload, null, 2));
+      const baseDir = cacheDirectory ?? documentDirectory;
+      if (!baseDir) {
+        throw new Error('No writable directory available');
+      }
+      const fileUri = `${baseDir}hold-export.json`;
+      await writeAsStringAsync(fileUri, JSON.stringify(payload, null, 2));
       await Sharing.shareAsync(fileUri, {
         mimeType: 'application/json',
         dialogTitle: 'Export Hold data',

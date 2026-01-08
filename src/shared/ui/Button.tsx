@@ -1,5 +1,4 @@
-import { PressableProps } from 'react-native';
-import { Pressable } from 'uniwind/components';
+import { Pressable, PressableProps } from 'react-native';
 import { Text } from '@/shared/ui/Text';
 
 const variants = {
