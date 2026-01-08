@@ -3,20 +3,34 @@ import { Platform } from 'react-native';
 import { Plan } from '../plan/domain/types';
 import { logError, logInfo } from '../logs/logService';
 
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: false,
-    shouldSetBadge: false,
-  }),
-});
+let notificationHandlerInitialized = false;
+
+export function initializeNotificationHandler() {
+  if (notificationHandlerInitialized) {
+    return;
+  }
+  try {
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowAlert: true,
+        shouldPlaySound: false,
+        shouldSetBadge: false,
+      }),
+    });
+    notificationHandlerInitialized = true;
+  } catch (error) {
+    console.error('Failed to initialize notification handler', error);
+  }
+}
 
 export async function requestNotificationPermissions() {
+  initializeNotificationHandler();
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }
 
 export async function getNotificationPermissions() {
+  initializeNotificationHandler();
   const { status } = await Notifications.getPermissionsAsync();
   return status;
 }
@@ -32,6 +46,7 @@ function toExpoWeekday(dayIndex: number) {
 
 export async function schedulePlanNotifications(plan: Plan) {
   try {
+    initializeNotificationHandler();
     await Notifications.cancelAllScheduledNotificationsAsync();
     if (Platform.OS === 'android') {
       await Notifications.setNotificationChannelAsync('routine', {

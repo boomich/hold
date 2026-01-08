@@ -1,31 +1,33 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Linking, View } from 'react-native';
+
+import { subDays } from 'date-fns';
 import { router } from 'expo-router';
-import { Screen } from '../../src/components/Screen';
-import { AppText } from '../../src/components/AppText';
+import { Linking, View } from 'react-native';
+
 import { Card } from '../../src/components/Card';
+import { Screen } from '../../src/components/Screen';
 import { Button } from '../../src/components/Button';
-import { SmallButton } from '../../src/components/SmallButton';
 import { Banner } from '../../src/components/Banner';
+import { AppText } from '../../src/components/AppText';
+import { Task } from '../../src/features/plan/domain/types';
 import { usePlan } from '../../src/features/plan/PlanProvider';
-import {
-  getDayIndex,
-  getNextWashDay,
-  getTodayTasks,
-  isScheduledWashDay,
-} from '../../src/features/plan/domain/planRules';
+import { SmallButton } from '../../src/components/SmallButton';
 import { formatDateISO, formatDayLabel, formatFriendlyDate } from '../../src/utils/date';
+
 import {
+  markComplete,
   getCompletionsForDate,
   getCompletionsForRange,
-  markComplete,
 } from '../../src/features/completions/storage/completionRepository';
-import { Task } from '../../src/features/plan/domain/types';
-import { logError } from '../../src/features/logs/logService';
+
 import {
-  getNotificationPermissions,
-} from '../../src/features/notifications/notificationsService';
-import { subDays } from 'date-fns';
+  getDayIndex,
+  getTodayTasks,
+  getNextWashDay,
+  isScheduledWashDay,
+} from '../../src/features/plan/domain/planRules';
+import { logError } from '../../src/features/logs/logService';
+import { getNotificationPermissions } from '../../src/features/notifications/notificationsService';
 
 export default function Home() {
   const { plan } = usePlan();
@@ -180,7 +182,11 @@ export default function Home() {
           {latherTask ? (
             <View className="mb-2 mr-2">
               <SmallButton
-                label={completedTasks.includes(latherTask.taskType) ? 'Lather done' : 'Heel/fingers lather done'}
+                label={
+                  completedTasks.includes(latherTask.taskType)
+                    ? 'Lather done'
+                    : 'Heel/fingers lather done'
+                }
                 onPress={() => handleMark(latherTask)}
               />
             </View>

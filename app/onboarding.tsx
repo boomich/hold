@@ -11,7 +11,10 @@ import { ToggleRow } from '../src/components/ToggleRow';
 import { Button } from '../src/components/Button';
 import { createPlan } from '../src/features/plan/storage/planRepository';
 import { formatDateISO, formatTime, parseTimeToDate } from '../src/utils/date';
-import { requestNotificationPermissions, schedulePlanNotifications } from '../src/features/notifications/notificationsService';
+import {
+  requestNotificationPermissions,
+  schedulePlanNotifications,
+} from '../src/features/notifications/notificationsService';
 import { usePlan } from '../src/features/plan/PlanProvider';
 import { logError, logInfo } from '../src/features/logs/logService';
 
@@ -93,7 +96,7 @@ export default function Onboarding() {
   };
 
   return (
-    <Screen>
+    <Screen scrollable>
       <View className="flex-1 pb-10">
         <AppText variant="title" className="mt-8">
           Hold keeps the plan simple.
@@ -104,7 +107,11 @@ export default function Onboarding() {
 
         <View className="mt-8">
           <SectionHeader title="Start date" subtitle="Default is today." />
-          <TimeField label="Start" value={formatDateISO(startDate)} onPress={() => setPicker('start')} />
+          <TimeField
+            label="Start"
+            value={formatDateISO(startDate)}
+            onPress={() => setPicker('start')}
+          />
         </View>
 
         <View className="mt-8">
@@ -153,7 +160,11 @@ export default function Onboarding() {
 
       {picker ? (
         <DateTimePicker
-          value={picker === 'start' ? startDate : parseTimeToDate(picker === 'morning' ? morningTime : eveningTime)}
+          value={
+            picker === 'start'
+              ? startDate
+              : parseTimeToDate(picker === 'morning' ? morningTime : eveningTime)
+          }
           mode={picker === 'start' ? 'date' : 'time'}
           display="spinner"
           onChange={handleTimeChange}

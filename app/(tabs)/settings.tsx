@@ -144,7 +144,7 @@ export default function Settings() {
   };
 
   return (
-    <Screen>
+    <Screen scrollable>
       <View className="flex-1 pb-8">
         <AppText variant="title" className="mt-6">
           Plan settings
@@ -203,7 +203,11 @@ export default function Settings() {
 
         <View className="mt-6">
           <SectionHeader title="Terbinafine" subtitle="Turn it on when you have it." />
-          <ToggleRow label="Enabled" value={plan.terbinafineEnabled} onChange={handleTerbinafineToggle} />
+          <ToggleRow
+            label="Enabled"
+            value={plan.terbinafineEnabled}
+            onChange={handleTerbinafineToggle}
+          />
         </View>
 
         <View className="mt-8">
