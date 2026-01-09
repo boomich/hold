@@ -11,7 +11,8 @@
     },
     "plugins": [
       "expo-router",
-      "expo-notifications"
+      "expo-notifications",
+      "@react-native-community/datetimepicker"
     ],
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -27,7 +28,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSUserNotificationsUsageDescription": "We use reminders to help you keep the routine on track."
+        "NSUserNotificationsUsageDescription": "We use reminders to help you keep the routine on track.",
+        "ITSAppUsesNonExemptEncryption": false
       },
       "bundleIdentifier": "com.jvsouza.hold"
     },
@@ -39,6 +41,13 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       }
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "57cf5a02-b9dc-43ea-bbdc-8b69c0a4716d"
+      }
+    },
+    "owner": "weareboomich"
   }
 }

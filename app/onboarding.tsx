@@ -1,22 +1,28 @@
 import { useMemo, useState } from 'react';
+
 import { View } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
+
+import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+import DateTimePicker from '@react-native-community/datetimepicker';
+
 import { Screen } from '../src/components/Screen';
 import { AppText } from '../src/components/AppText';
-import { SectionHeader } from '../src/components/SectionHeader';
-import { DayOfWeekPicker } from '../src/components/DayOfWeekPicker';
+import { Button } from '../src/components/Button';
 import { TimeField } from '../src/components/TimeField';
 import { ToggleRow } from '../src/components/ToggleRow';
-import { Button } from '../src/components/Button';
+import { usePlan } from '../src/features/plan/PlanProvider';
+import { SectionHeader } from '../src/components/SectionHeader';
+import { DayOfWeekPicker } from '../src/components/DayOfWeekPicker';
+import { logError, logInfo } from '../src/features/logs/logService';
 import { createPlan } from '../src/features/plan/storage/planRepository';
 import { formatDateISO, formatTime, parseTimeToDate } from '../src/utils/date';
+
 import {
   requestNotificationPermissions,
   schedulePlanNotifications,
 } from '../src/features/notifications/notificationsService';
-import { usePlan } from '../src/features/plan/PlanProvider';
-import { logError, logInfo } from '../src/features/logs/logService';
 
 const defaultDays = [1, 3, 6];
 

@@ -1,8 +1,11 @@
 import { PropsWithChildren, useEffect, useState } from 'react';
-import { initializeDatabase } from './storage/database';
-import { PlanProvider } from './features/plan/PlanProvider';
+
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+
 import { Screen } from './components/Screen';
 import { AppText } from './components/AppText';
+import { initializeDatabase } from './storage/database';
+import { PlanProvider } from './features/plan/PlanProvider';
 import { initializeNotificationHandler } from './features/notifications/notificationsService';
 
 export function AppProviders({ children }: PropsWithChildren) {
@@ -24,11 +27,13 @@ export function AppProviders({ children }: PropsWithChildren) {
 
   if (!ready) {
     return (
-      <Screen>
-        <AppText variant="subtitle" className="mt-10">
-          Setting up Hold...
-        </AppText>
-      </Screen>
+      <SafeAreaProvider>
+        <Screen>
+          <AppText variant="subtitle" className="mt-10">
+            Setting up Hold...
+          </AppText>
+        </Screen>
+      </SafeAreaProvider>
     );
   }
 
