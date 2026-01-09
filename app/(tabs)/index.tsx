@@ -10,9 +10,11 @@ import { Button } from '../../src/components/Button';
 import { Banner } from '../../src/components/Banner';
 import { AppText } from '../../src/components/AppText';
 import { Task } from '../../src/features/plan/domain/types';
+import { logError } from '../../src/features/logs/logService';
 import { usePlan } from '../../src/features/plan/PlanProvider';
 import { SmallButton } from '../../src/components/SmallButton';
 import { formatDateISO, formatDayLabel, formatFriendlyDate } from '../../src/utils/date';
+import { getNotificationPermissions } from '../../src/features/notifications/notificationsService';
 
 import {
   markComplete,
@@ -26,8 +28,6 @@ import {
   getNextWashDay,
   isScheduledWashDay,
 } from '../../src/features/plan/domain/planRules';
-import { logError } from '../../src/features/logs/logService';
-import { getNotificationPermissions } from '../../src/features/notifications/notificationsService';
 
 export default function Home() {
   const { plan } = usePlan();

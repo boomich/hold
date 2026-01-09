@@ -1,11 +1,32 @@
 import { Platform, Text, TextProps } from 'react-native';
+import { fontSize } from '../design/tokens';
 
 const variants = {
-  title: { className: 'text-2xl text-ink', fontFamily: Platform.select({ ios: 'AvenirNext-DemiBold', android: 'serif' }) },
-  subtitle: { className: 'text-lg text-ink', fontFamily: Platform.select({ ios: 'AvenirNext-DemiBold', android: 'serif' }) },
-  body: { className: 'text-base text-ink', fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }) },
-  muted: { className: 'text-sm text-inkMuted', fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }) },
-  caption: { className: 'text-xs text-inkMuted', fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }) },
+  title: {
+    className: 'text-ink',
+    fontSize: fontSize.title,
+    fontFamily: Platform.select({ ios: 'AvenirNext-DemiBold', android: 'serif' }),
+  },
+  subtitle: {
+    className: 'text-ink',
+    fontSize: fontSize.subtitle,
+    fontFamily: Platform.select({ ios: 'AvenirNext-DemiBold', android: 'serif' }),
+  },
+  body: {
+    className: 'text-ink',
+    fontSize: fontSize.body,
+    fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }),
+  },
+  muted: {
+    className: 'text-inkMuted',
+    fontSize: fontSize.muted,
+    fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }),
+  },
+  caption: {
+    className: 'text-inkMuted',
+    fontSize: fontSize.caption,
+    fontFamily: Platform.select({ ios: 'AvenirNext-Regular', android: 'serif' }),
+  },
 };
 
 type Variant = keyof typeof variants;
@@ -20,7 +41,7 @@ export function AppText({ variant = 'body', className = '', style, ...props }: P
     <Text
       {...props}
       className={`${variantStyle.className} ${className}`}
-      style={[{ fontFamily: variantStyle.fontFamily }, style]}
+      style={[{ fontFamily: variantStyle.fontFamily, fontSize: variantStyle.fontSize }, style]}
     />
   );
 }

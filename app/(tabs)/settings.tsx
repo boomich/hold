@@ -1,29 +1,41 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Alert, View } from 'react-native';
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+
 import * as Sharing from 'expo-sharing';
+import * as FileSystem from 'expo-file-system';
+import * as DocumentPicker from 'expo-document-picker';
+
+import { router } from 'expo-router';
+import { Alert, View } from 'react-native';
+
+import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+
+import { Button } from '../../src/components/Button';
 import { Screen } from '../../src/components/Screen';
 import { AppText } from '../../src/components/AppText';
-import { SectionHeader } from '../../src/components/SectionHeader';
-import { DayOfWeekPicker } from '../../src/components/DayOfWeekPicker';
 import { TimeField } from '../../src/components/TimeField';
 import { ToggleRow } from '../../src/components/ToggleRow';
-import { Button } from '../../src/components/Button';
 import { usePlan } from '../../src/features/plan/PlanProvider';
+import { SectionHeader } from '../../src/components/SectionHeader';
+import { parseTimeToDate, formatTime } from '../../src/utils/date';
+import { DayOfWeekPicker } from '../../src/components/DayOfWeekPicker';
+import { logError, logInfo } from '../../src/features/logs/logService';
+import { deletePlan } from '../../src/features/plan/storage/planRepository';
+import { buildBackupPayload, importBackup } from '../../src/storage/backup';
 import { updatePlanWithRules } from '../../src/features/plan/domain/planService';
 import { canEditDaysOfWeek, getDayIndex } from '../../src/features/plan/domain/planRules';
-import { parseTimeToDate, formatTime } from '../../src/utils/date';
 import { schedulePlanNotifications } from '../../src/features/notifications/notificationsService';
-import { buildBackupPayload, importBackup } from '../../src/storage/backup';
-import { logError, logInfo } from '../../src/features/logs/logService';
-import { router } from 'expo-router';
 
 export default function Settings() {
   const { plan, refresh } = usePlan();
   const [picker, setPicker] = useState<'morning' | 'evening' | null>(null);
   const [draftDays, setDraftDays] = useState<number[]>([]);
+
+  const today = useMemo(() => new Date(), []);
+  useEffect(() => {
+    if (plan) {
+      setDraftDays(plan.nizoralDaysOfWeek);
+    }
+  }, [plan]);
 
   if (!plan) {
     return (
@@ -34,11 +46,6 @@ export default function Settings() {
       </Screen>
     );
   }
-
-  const today = useMemo(() => new Date(), []);
-  useEffect(() => {
-    setDraftDays(plan.nizoralDaysOfWeek);
-  }, [plan.nizoralDaysOfWeek]);
 
   const canEditDays = canEditDaysOfWeek(plan.startDate, today);
   const dayIndex = getDayIndex(plan.startDate, today);
@@ -143,6 +150,12 @@ export default function Settings() {
     ]);
   };
 
+  const clearData = async () => {
+    await deletePlan();
+    await logInfo('Data cleared');
+    router.replace('/onboarding');
+  };
+
   return (
     <Screen scrollable>
       <View className="flex-1 pb-8">
@@ -223,6 +236,7 @@ export default function Settings() {
         <View className="mt-8">
           <SectionHeader title="Diagnostics" subtitle="Quick access to logs." />
           <Button label="Open logs" variant="outline" onPress={() => router.push('/logs')} />
+          <Button label="Clear Data" variant="outline" onPress={() => clearData()} />
         </View>
 
         {picker ? (

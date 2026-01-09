@@ -39,8 +39,7 @@ export async function createPlan(plan: Omit<Plan, 'createdAt' | 'updatedAt'>) {
   await db.runAsync(
     `INSERT OR REPLACE INTO plan
     (id, startDate, nizoralDaysOfWeek, eveningTime, morningTime, terbinafineEnabled, createdAt, updatedAt)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
-    ,
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
     [
       PLAN_ID,
       plan.startDate,
@@ -78,4 +77,9 @@ export async function updatePlan(partial: Partial<Plan>) {
     ]
   );
   return updated;
+}
+
+export async function deletePlan() {
+  const db = await getDb();
+  await db.runAsync('DELETE FROM plan WHERE id = ?', [PLAN_ID]);
 }

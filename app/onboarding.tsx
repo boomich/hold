@@ -8,8 +8,8 @@ import type { DateTimePickerEvent } from '@react-native-community/datetimepicker
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Screen } from '../src/components/Screen';
-import { AppText } from '../src/components/AppText';
 import { Button } from '../src/components/Button';
+import { AppText } from '../src/components/AppText';
 import { TimeField } from '../src/components/TimeField';
 import { ToggleRow } from '../src/components/ToggleRow';
 import { usePlan } from '../src/features/plan/PlanProvider';
@@ -20,8 +20,8 @@ import { createPlan } from '../src/features/plan/storage/planRepository';
 import { formatDateISO, formatTime, parseTimeToDate } from '../src/utils/date';
 
 import {
-  requestNotificationPermissions,
   schedulePlanNotifications,
+  requestNotificationPermissions,
 } from '../src/features/notifications/notificationsService';
 
 const defaultDays = [1, 3, 6];

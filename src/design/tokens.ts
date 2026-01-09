@@ -31,3 +31,11 @@ export const font = {
   display: 'AvenirNext-DemiBold',
   body: 'AvenirNext-Regular',
 } as const;
+
+export const fontSize = {
+  caption: 13,
+  muted: 15,
+  body: 17,
+  subtitle: 20,
+  title: 26,
+} as const;
