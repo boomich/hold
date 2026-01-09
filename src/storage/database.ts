@@ -45,20 +45,23 @@ class WebDatabase implements SQLiteDatabase {
     }
   }
 
-  async runAsync(sql: string, params: unknown[] = []): Promise<{ lastInsertRowId: number; changes: number }> {
+  async runAsync(
+    sql: string,
+    params: unknown[] = []
+  ): Promise<{ lastInsertRowId: number; changes: number }> {
     const sqlLower = sql.toLowerCase();
 
     // Handle plan operations
     if (sqlLower.includes('into plan')) {
       const plan = {
-        id: 1,
-        startDate: params[0] as string,
-        nizoralDaysOfWeek: params[1] as string,
-        eveningTime: params[2] as string,
-        morningTime: params[3] as string,
-        terbinafineEnabled: params[4] as number,
-        createdAt: params[5] as string,
-        updatedAt: params[6] as string,
+        id: params[0] as number,
+        startDate: params[1] as string,
+        nizoralDaysOfWeek: params[2] as string,
+        eveningTime: params[3] as string,
+        morningTime: params[4] as string,
+        terbinafineEnabled: params[5] as number,
+        createdAt: params[6] as string,
+        updatedAt: params[7] as string,
       };
       this.setStore('plan', [plan]);
       return { lastInsertRowId: 1, changes: 1 };
@@ -85,7 +88,10 @@ class WebDatabase implements SQLiteDatabase {
       return { lastInsertRowId: 1, changes: 1 };
     }
 
-    if (sqlLower.includes('delete from plan') || sqlLower.includes('delete from completions; delete from symptom_checkins; delete from plan')) {
+    if (
+      sqlLower.includes('delete from plan') ||
+      sqlLower.includes('delete from completions; delete from symptom_checkins; delete from plan')
+    ) {
       this.setStore('plan', []);
       if (sqlLower.includes('completions')) {
         this.setStore('completions', []);
@@ -97,14 +103,33 @@ class WebDatabase implements SQLiteDatabase {
     // Handle completions
     if (sqlLower.includes('into completions')) {
       const completions = this.getStore<Record<string, unknown>>('completions');
-      const id = sqlLower.includes('or ignore') && params[0] ? params[0] : completions.length + 1;
-      const completion = {
-        id,
-        date: params[1] as string,
-        taskType: params[2] as string,
-        completedAt: params[3] as string,
-        notes: params[4] as string | null,
-      };
+
+      // Check if SQL includes 'id' in the column list to determine parameter mapping
+      const hasIdColumn = sqlLower.includes('(id,') || sqlLower.match(/\(id\s*,/);
+
+      let completion: Record<string, unknown>;
+      if (hasIdColumn) {
+        // SQL includes id: INSERT INTO completions (id, date, taskType, ...)
+        completion = {
+          id: params[0] as number,
+          date: params[1] as string,
+          taskType: params[2] as string,
+          completedAt: params[3] as string,
+          notes: params[4] as string | null,
+        };
+      } else {
+        // SQL doesn't include id: INSERT INTO completions (date, taskType, ...)
+        const maxId =
+          completions.length > 0 ? Math.max(...completions.map((c) => (c.id as number) || 0)) : 0;
+        completion = {
+          id: maxId + 1,
+          date: params[0] as string,
+          taskType: params[1] as string,
+          completedAt: params[2] as string,
+          notes: params[3] as string | null,
+        };
+      }
+
       // Check for existing (UNIQUE constraint on date, taskType)
       const existing = completions.findIndex(
         (c) => c.date === completion.date && c.taskType === completion.taskType
@@ -119,17 +144,37 @@ class WebDatabase implements SQLiteDatabase {
     // Handle checkins
     if (sqlLower.includes('into symptom_checkins')) {
       const checkins = this.getStore<Record<string, unknown>>('checkins');
-      const id = sqlLower.includes('or replace') && params[0] ? params[0] : checkins.length + 1;
-      const checkin = {
-        id,
-        date: params[1] as string,
-        itchScore: params[2],
-        flakesScore: params[3],
-        freeText: params[4],
-        createdAt: params[5] as string,
-      };
-      // Replace existing if exists
-      const existing = checkins.findIndex((c) => c.date === checkin.date);
+
+      // Check if SQL includes 'id' in the column list to determine parameter mapping
+      const hasIdColumn = sqlLower.includes('(id,') || sqlLower.match(/\(id\s*,/);
+
+      let checkin: Record<string, unknown>;
+      if (hasIdColumn) {
+        // SQL includes id: INSERT INTO symptom_checkins (id, date, itchScore, ...)
+        checkin = {
+          id: params[0] as number,
+          date: params[1] as string,
+          itchScore: params[2],
+          flakesScore: params[3],
+          freeText: params[4],
+          createdAt: params[5] as string,
+        };
+      } else {
+        // SQL doesn't include id: INSERT INTO symptom_checkins (date, itchScore, ...)
+        const maxId =
+          checkins.length > 0 ? Math.max(...checkins.map((c) => (c.id as number) || 0)) : 0;
+        checkin = {
+          id: maxId + 1,
+          date: params[0] as string,
+          itchScore: params[1],
+          flakesScore: params[2],
+          freeText: params[3],
+          createdAt: params[4] as string,
+        };
+      }
+
+      // Replace existing if exists (ON CONFLICT or OR REPLACE behavior)
+      const existing = checkins.findIndex((c) => (c.date as string) === (checkin.date as string));
       if (existing !== -1) {
         checkins[existing] = checkin;
       } else {
@@ -183,9 +228,15 @@ class WebDatabase implements SQLiteDatabase {
     if (sqlLower.includes('from completions')) {
       const completions = this.getStore<Record<string, unknown>>('completions');
       if (params && params.length >= 2) {
+        // Range query: WHERE date >= ? AND date <= ?
         return completions.filter(
-          (c) => c.date >= (params[0] as string) && c.date <= (params[1] as string)
+          (c) =>
+            (c.date as string) >= (params[0] as string) &&
+            (c.date as string) <= (params[1] as string)
         ) as T[];
+      } else if (params && params.length === 1) {
+        // Single date query: WHERE date = ?
+        return completions.filter((c) => (c.date as string) === (params[0] as string)) as T[];
       }
       return completions as T[];
     }
@@ -194,7 +245,9 @@ class WebDatabase implements SQLiteDatabase {
       const checkins = this.getStore<Record<string, unknown>>('checkins');
       if (params && params.length >= 2) {
         return checkins.filter(
-          (c) => c.date >= (params[0] as string) && c.date <= (params[1] as string)
+          (c) =>
+            (c.date as string) >= (params[0] as string) &&
+            (c.date as string) <= (params[1] as string)
         ) as T[];
       }
       return checkins as T[];
@@ -214,9 +267,13 @@ export async function getDb(): Promise<SQLiteDatabase> {
     if (Platform.OS === 'web') {
       db = new WebDatabase();
     } else {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
       const SQLite = require('expo-sqlite');
       db = await SQLite.openDatabaseAsync('hold.db');
     }
+  }
+  if (!db) {
+    throw new Error('Failed to initialize database');
   }
   return db;
 }

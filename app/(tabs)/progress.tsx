@@ -5,7 +5,11 @@ import { AppText } from '../../src/components/AppText';
 import { Card } from '../../src/components/Card';
 import { LineChart } from '../../src/components/LineChart';
 import { usePlan } from '../../src/features/plan/PlanProvider';
-import { getDayIndex, getTodayTasks, isAnalysisUnlocked } from '../../src/features/plan/domain/planRules';
+import {
+  getDayIndex,
+  getTodayTasks,
+  isAnalysisUnlocked,
+} from '../../src/features/plan/domain/planRules';
 import { formatDateISO } from '../../src/utils/date';
 import { getCheckInsForRange } from '../../src/features/checkin/storage/checkinRepository';
 import { getCompletionsForRange } from '../../src/features/completions/storage/completionRepository';
@@ -54,7 +58,9 @@ export default function Progress() {
           flakes.push(checkin.flakesScore);
         }
 
-        const tasks = getTodayTasks(plan, date).filter((task) => task.taskType !== 'NIZORAL_LATHER');
+        const tasks = getTodayTasks(plan, date).filter(
+          (task) => task.taskType !== 'NIZORAL_LATHER'
+        );
         const dueCount = tasks.length;
         const completedSet = completionMap.get(dateKey) ?? new Set();
         const done = tasks.filter((task) => completedSet.has(task.taskType)).length;
@@ -99,7 +105,7 @@ export default function Progress() {
   }
 
   return (
-    <Screen>
+    <Screen scrollable>
       <View className="flex-1 pb-6">
         <AppText variant="title" className="mt-6">
           Progress

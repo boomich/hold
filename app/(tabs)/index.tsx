@@ -46,9 +46,8 @@ export default function Home() {
   const latherTask = tasks.find((task) => task.taskType === 'NIZORAL_LATHER');
 
   const loadStatus = useCallback(async () => {
-    if (!plan) {
-      return;
-    }
+    if (!plan) return;
+
     try {
       const completions = await getCompletionsForDate(todayISO);
       setCompletedTasks(completions.map((item) => item.taskType));

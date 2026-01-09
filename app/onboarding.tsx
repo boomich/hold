@@ -180,7 +180,13 @@ export default function Onboarding() {
           }
           mode={picker === 'start' ? 'date' : 'time'}
           display="spinner"
-          onChange={handleTimeChange}
+          // Fix type error by asserting handleTimeChange to the correct type
+          onChange={
+            handleTimeChange as (
+              event: import('@react-native-community/datetimepicker').DateTimePickerEvent,
+              date?: Date | undefined
+            ) => void
+          }
         />
       ) : null}
 
