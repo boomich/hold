@@ -1,11 +1,7 @@
 import { useMemo, useState } from 'react';
 
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 import { router } from 'expo-router';
-
-import type { DateTimePickerEvent } from '@react-native-community/datetimepicker';
-
-import DateTimePicker from '@react-native-community/datetimepicker';
 
 import { Screen } from '../src/components/Screen';
 import { Button } from '../src/components/Button';
@@ -23,6 +19,17 @@ import {
   schedulePlanNotifications,
   requestNotificationPermissions,
 } from '../src/features/notifications/notificationsService';
+
+// Conditionally import native-only DateTimePicker
+let DateTimePicker: typeof import('@react-native-community/datetimepicker').default | null = null;
+if (Platform.OS !== 'web') {
+  DateTimePicker = require('@react-native-community/datetimepicker').default;
+}
+
+type DateTimePickerEvent = {
+  type: 'set' | 'dismissed';
+  nativeEvent: { timestamp?: number };
+};
 
 const defaultDays = [1, 3, 6];
 
@@ -164,7 +171,7 @@ export default function Onboarding() {
         </View>
       </View>
 
-      {picker ? (
+      {picker && Platform.OS !== 'web' && DateTimePicker ? (
         <DateTimePicker
           value={
             picker === 'start'
@@ -175,6 +182,57 @@ export default function Onboarding() {
           display="spinner"
           onChange={handleTimeChange}
         />
+      ) : null}
+
+      {picker && Platform.OS === 'web' ? (
+        <View className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <View className="rounded-xl bg-white p-6">
+            <AppText variant="subtitle" className="mb-4">
+              Set {picker === 'start' ? 'start date' : `${picker} time`}
+            </AppText>
+            {picker === 'start' ? (
+              <input
+                type="date"
+                defaultValue={formatDateISO(startDate)}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    handleTimeChange({ type: 'set', nativeEvent: {} }, new Date(value));
+                  }
+                }}
+                style={{
+                  fontSize: 18,
+                  padding: 8,
+                  borderRadius: 8,
+                  border: '1px solid #ccc',
+                }}
+              />
+            ) : (
+              <input
+                type="time"
+                defaultValue={picker === 'morning' ? morningTime : eveningTime}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    handleTimeChange(
+                      { type: 'set', nativeEvent: {} },
+                      new Date(`2000-01-01T${value}:00`)
+                    );
+                  }
+                }}
+                style={{
+                  fontSize: 18,
+                  padding: 8,
+                  borderRadius: 8,
+                  border: '1px solid #ccc',
+                }}
+              />
+            )}
+            <View className="mt-4">
+              <Button label="Cancel" variant="outline" onPress={() => setPicker(null)} />
+            </View>
+          </View>
+        </View>
       ) : null}
     </Screen>
   );

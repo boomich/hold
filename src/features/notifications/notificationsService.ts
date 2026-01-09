@@ -1,11 +1,19 @@
-import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Plan } from '../plan/domain/types';
 import { logError, logInfo } from '../logs/logService';
 
+// Conditionally import expo-notifications only on native platforms
+let Notifications: typeof import('expo-notifications') | null = null;
+if (Platform.OS !== 'web') {
+  Notifications = require('expo-notifications');
+}
+
 let notificationHandlerInitialized = false;
 
 export function initializeNotificationHandler() {
+  if (Platform.OS === 'web' || !Notifications) {
+    return;
+  }
   if (notificationHandlerInitialized) {
     return;
   }
@@ -24,12 +32,18 @@ export function initializeNotificationHandler() {
 }
 
 export async function requestNotificationPermissions() {
+  if (Platform.OS === 'web' || !Notifications) {
+    return false;
+  }
   initializeNotificationHandler();
   const { status } = await Notifications.requestPermissionsAsync();
   return status === 'granted';
 }
 
 export async function getNotificationPermissions() {
+  if (Platform.OS === 'web' || !Notifications) {
+    return 'denied';
+  }
   initializeNotificationHandler();
   const { status } = await Notifications.getPermissionsAsync();
   return status;
@@ -45,6 +59,10 @@ function toExpoWeekday(dayIndex: number) {
 }
 
 export async function schedulePlanNotifications(plan: Plan) {
+  if (Platform.OS === 'web' || !Notifications) {
+    await logInfo('Notifications skipped on web');
+    return;
+  }
   try {
     initializeNotificationHandler();
     await Notifications.cancelAllScheduledNotificationsAsync();
