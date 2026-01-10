@@ -1,18 +1,21 @@
 import { Tabs } from 'expo-router';
 import { Feather } from '@expo/vector-icons';
+
 import { colors } from '../../src/design/tokens';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
-        headerTitleStyle: { fontFamily: 'AvenirNext-DemiBold' },
         headerTintColor: colors.ink,
-        headerStyle: { backgroundColor: colors.surface },
         tabBarActiveTintColor: colors.mossDark,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-      }}
-    >
+        headerStyle: { backgroundColor: colors.surface },
+        headerTitleStyle: { fontFamily: 'AvenirNext-DemiBold' },
+        tabBarStyle: {
+          borderTopColor: colors.border,
+          backgroundColor: colors.surface,
+        },
+      }}>
       <Tabs.Screen
         name="index"
         options={{

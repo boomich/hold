@@ -185,16 +185,9 @@ export default function History() {
   }
 
   return (
-    <Screen>
-      <View className="flex-1 pb-6">
-        <AppText variant="title" className="mt-6">
-          History
-        </AppText>
-        <AppText variant="muted" className="mt-1">
-          Last 30 days at a glance.
-        </AppText>
-
-        {stats && (
+    <Screen className="px-0!">
+      <View className="flex-1">
+        {/* {stats && (
           <View className="mt-4 flex-row">
             <View className="mr-3 flex-1 rounded-xl bg-surface px-3 py-3">
               <AppText variant="caption" className="text-inkMuted">
@@ -213,12 +206,23 @@ export default function History() {
               </AppText>
             </View>
           </View>
-        )}
+        )} */}
 
         <FlatList
           data={days}
+          ListHeaderComponent={() => (
+            <View className="mb-6">
+              <AppText variant="title" className="mt-6">
+                History
+              </AppText>
+              <AppText variant="muted" className="mt-1">
+                Last 30 days at a glance.
+              </AppText>
+            </View>
+          )}
+          contentContainerClassName="px-5"
           keyExtractor={(item) => item.toISOString()}
-          contentContainerStyle={{ paddingVertical: 16 }}
+          contentContainerStyle={{ paddingBottom: 16 }}
           renderItem={({ item }) => {
             const dateKey = formatDateISO(item);
             const tasks = getTodayTasks(plan, item);

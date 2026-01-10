@@ -287,7 +287,7 @@ export default function Settings() {
           </View>
         </View>
 
-        <View className="mt-8">
+        <View className="mt-8 gap-3">
           <SectionHeader title="Diagnostics" subtitle="Quick access to logs." />
           <Button label="Open logs" variant="outline" onPress={() => router.push('/logs')} />
           <Button label="Clear Data" variant="outline" onPress={() => clearData()} />
@@ -328,11 +328,7 @@ export default function Settings() {
                 }}
               />
               <View className="mt-4">
-                <Button
-                  label="Cancel"
-                  variant="outline"
-                  onPress={() => setPicker(null)}
-                />
+                <Button label="Cancel" variant="outline" onPress={() => setPicker(null)} />
               </View>
             </View>
           </View>

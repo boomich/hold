@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { subDays } from 'date-fns';
 import { router } from 'expo-router';
-import { Linking, View } from 'react-native';
+import { Feather } from '@expo/vector-icons';
+import { Linking, View, Pressable } from 'react-native';
+import { subDays, addDays, parseISO, isBefore, isAfter, startOfDay } from 'date-fns';
 
 import { Card } from '../../src/components/Card';
+import { colors } from '../../src/design/tokens';
 import { Screen } from '../../src/components/Screen';
 import { Button } from '../../src/components/Button';
 import { Banner } from '../../src/components/Banner';
@@ -31,16 +33,59 @@ import {
 
 export default function Home() {
   const { plan } = usePlan();
-  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [missedWash, setMissedWash] = useState(false);
+  const [completedTasks, setCompletedTasks] = useState<string[]>([]);
   const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>(
     'undetermined'
   );
-
-  const today = useMemo(() => new Date(), []);
+  // Normalize today to start of day for consistent comparisons
+  const today = useMemo(() => startOfDay(new Date()), []);
   const todayISO = formatDateISO(today);
 
-  const tasks = useMemo(() => (plan ? getTodayTasks(plan, today) : []), [plan, today]);
+  // Initialize selectedDate normalized to start of day
+  const [selectedDate, setSelectedDate] = useState<Date>(() => startOfDay(new Date()));
+  const selectedDateISO = formatDateISO(selectedDate);
+
+  // Calculate plan boundaries - normalize to start of day
+  const planStartDate = useMemo(() => {
+    if (!plan) return null;
+    return startOfDay(parseISO(plan.startDate));
+  }, [plan]);
+
+  // Normalize selectedDate for comparisons
+  const normalizedSelectedDate = useMemo(() => startOfDay(selectedDate), [selectedDate]);
+
+  const canGoBack = useMemo(() => {
+    if (!planStartDate) return false;
+    // Can go back only if selected date is after plan start date (not equal)
+    return isAfter(normalizedSelectedDate, planStartDate);
+  }, [normalizedSelectedDate, planStartDate]);
+
+  const canGoForward = useMemo(() => {
+    // Can go forward only if selected date is before today (not equal to or after)
+    return isBefore(normalizedSelectedDate, today);
+  }, [normalizedSelectedDate, today]);
+
+  const handlePreviousDay = () => {
+    if (canGoBack) {
+      setSelectedDate((prev) => startOfDay(subDays(prev, 1)));
+    }
+  };
+
+  const handleNextDay = () => {
+    if (canGoForward) {
+      setSelectedDate((prev) => startOfDay(addDays(prev, 1)));
+    }
+  };
+
+  const handleToday = () => {
+    setSelectedDate(today);
+  };
+
+  const tasks = useMemo(
+    () => (plan ? getTodayTasks(plan, normalizedSelectedDate) : []),
+    [plan, normalizedSelectedDate]
+  );
   const morningTasks = tasks.filter((task) => task.timeOfDay === 'morning');
   const eveningTasks = tasks.filter((task) => task.timeOfDay === 'evening');
   const latherTask = tasks.find((task) => task.taskType === 'NIZORAL_LATHER');
@@ -49,9 +94,10 @@ export default function Home() {
     if (!plan) return;
 
     try {
-      const completions = await getCompletionsForDate(todayISO);
+      const completions = await getCompletionsForDate(selectedDateISO);
       setCompletedTasks(completions.map((item) => item.taskType));
 
+      // Check missed wash from today's perspective (not selected date)
       const rangeStart = formatDateISO(subDays(today, 7));
       const rangeCompletions = await getCompletionsForRange(rangeStart, todayISO);
       const completionMap = new Map<string, Set<string>>();
@@ -78,7 +124,7 @@ export default function Home() {
     } catch (error) {
       await logError('Failed to load completion status', error);
     }
-  }, [plan, today, todayISO]);
+  }, [plan, selectedDateISO, today, todayISO]);
 
   useEffect(() => {
     loadStatus();
@@ -90,7 +136,7 @@ export default function Home() {
 
   const handleMark = async (task: Task) => {
     try {
-      await markComplete(todayISO, task.taskType);
+      await markComplete(selectedDateISO, task.taskType);
       await loadStatus();
     } catch (error) {
       await logError('Failed to mark complete', error);
@@ -107,18 +153,62 @@ export default function Home() {
     );
   }
 
-  const dayIndex = getDayIndex(plan.startDate, today);
+  const dayIndex = getDayIndex(plan.startDate, normalizedSelectedDate);
   const nextWash = getNextWashDay(plan, today);
   const nextWashLabel = formatDayLabel(nextWash);
+  // Compare against actual current date (not memoized) for reliable "today" detection
+  const actualTodayISO = formatDateISO(startOfDay(new Date()));
+  const isViewingToday = selectedDateISO === actualTodayISO;
+  const isViewingPast = isBefore(normalizedSelectedDate, today);
 
   return (
-    <Screen>
+    <Screen scrollable>
       <View className="flex-1 pb-6">
         <View className="mt-6">
-          <AppText variant="title">Day {dayIndex} of 30</AppText>
-          <AppText variant="muted" className="mt-1">
-            {formatFriendlyDate(today)}
-          </AppText>
+          <View className="flex-row items-center justify-between">
+            <View className="flex-1">
+              <AppText variant="title">Day {dayIndex} of 30</AppText>
+              <AppText variant="muted" className="mt-1">
+                {formatFriendlyDate(selectedDate)}
+              </AppText>
+            </View>
+            {isViewingToday && (
+              <Pressable onPress={handleToday} className="rounded-full bg-sand px-3 py-1.5">
+                <AppText variant="caption" className="text-ink">
+                  Today
+                </AppText>
+              </Pressable>
+            )}
+          </View>
+
+          {/* Date Navigation */}
+          <View className="mt-4 flex-row items-center justify-between rounded-xl bg-surface px-4 py-3">
+            <Pressable
+              onPress={handlePreviousDay}
+              disabled={!canGoBack}
+              className={`rounded-lg p-2 ${!canGoBack ? 'opacity-30' : ''}`}>
+              <Feather name="chevron-left" size={20} color={canGoBack ? colors.ink : colors.clay} />
+            </Pressable>
+
+            <View className="flex-1 items-center">
+              {isViewingPast && (
+                <AppText variant="caption" className="text-inkMuted">
+                  Viewing past day
+                </AppText>
+              )}
+            </View>
+
+            <Pressable
+              onPress={handleNextDay}
+              disabled={!canGoForward}
+              className={`rounded-lg p-2 ${!canGoForward ? 'opacity-30' : ''}`}>
+              <Feather
+                name="chevron-right"
+                size={20}
+                color={canGoForward ? colors.ink : colors.clay}
+              />
+            </Pressable>
+          </View>
         </View>
 
         {permissionStatus === 'denied' ? (
@@ -143,8 +233,8 @@ export default function Home() {
                   </AppText>
                   <View className="mt-3">
                     <Button
-                      label={completedTasks.includes(task.taskType) ? 'Done' : 'Mark done'}
                       onPress={() => handleMark(task)}
+                      label={completedTasks.includes(task.taskType) ? 'Done' : 'Mark done'}
                       disabled={completedTasks.includes(task.taskType)}
                     />
                   </View>
