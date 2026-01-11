@@ -1,13 +1,20 @@
 import { useEffect, useState } from 'react';
-import { FlatList, View } from 'react-native';
-import * as FileSystem from 'expo-file-system';
-import * as Sharing from 'expo-sharing';
+import { FlatList, Platform, View } from 'react-native';
 import { Screen } from '../src/components/Screen';
 import { AppText } from '../src/components/AppText';
 import { Button } from '../src/components/Button';
 import { getRecentLogs, LogEntry } from '../src/features/logs/logService';
 import { format } from 'date-fns';
 import { colors } from '../src/design/tokens';
+
+// Conditionally import native-only modules
+let FileSystem: typeof import('expo-file-system') | null = null;
+let Sharing: typeof import('expo-sharing') | null = null;
+
+if (Platform.OS !== 'web') {
+  FileSystem = require('expo-file-system');
+  Sharing = require('expo-sharing');
+}
 
 export default function Logs() {
   const [logs, setLogs] = useState<LogEntry[]>([]);
@@ -22,9 +29,26 @@ export default function Logs() {
       .reverse()
       .map((log) => `[${log.level.toUpperCase()}] ${log.createdAt} - ${log.message}`)
       .join('\n');
-    const uri = `${FileSystem.cacheDirectory}hold-logs-${Date.now()}.txt`;
-    await FileSystem.writeAsStringAsync(uri, text);
-    await Sharing.shareAsync(uri, { mimeType: 'text/plain' });
+
+    if (Platform.OS === 'web') {
+      // Web: download as file
+      const blob = new Blob([text], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hold-logs-${Date.now()}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      return;
+    }
+
+    if (FileSystem && Sharing) {
+      const uri = `${FileSystem.cacheDirectory}hold-logs-${Date.now()}.txt`;
+      await FileSystem.writeAsStringAsync(uri, text);
+      await Sharing.shareAsync(uri, { mimeType: 'text/plain' });
+    }
   };
 
   return (

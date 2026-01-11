@@ -1,13 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 
-import * as Sharing from 'expo-sharing';
-import * as FileSystem from 'expo-file-system';
-import * as DocumentPicker from 'expo-document-picker';
-
 import { router } from 'expo-router';
-import { Alert, View } from 'react-native';
-
-import DateTimePicker, { DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import { Alert, Platform, View } from 'react-native';
 
 import { Button } from '../../src/components/Button';
 import { Screen } from '../../src/components/Screen';
@@ -24,6 +18,24 @@ import { buildBackupPayload, importBackup } from '../../src/storage/backup';
 import { updatePlanWithRules } from '../../src/features/plan/domain/planService';
 import { canEditDaysOfWeek, getDayIndex } from '../../src/features/plan/domain/planRules';
 import { schedulePlanNotifications } from '../../src/features/notifications/notificationsService';
+
+// Conditionally import native-only modules
+let DateTimePicker: typeof import('@react-native-community/datetimepicker').default | null = null;
+let Sharing: typeof import('expo-sharing') | null = null;
+let FileSystem: typeof import('expo-file-system') | null = null;
+let DocumentPicker: typeof import('expo-document-picker') | null = null;
+
+if (Platform.OS !== 'web') {
+  DateTimePicker = require('@react-native-community/datetimepicker').default;
+  Sharing = require('expo-sharing');
+  FileSystem = require('expo-file-system');
+  DocumentPicker = require('expo-document-picker');
+}
+
+type DateTimePickerEvent = {
+  type: 'set' | 'dismissed';
+  nativeEvent: { timestamp?: number };
+};
 
 export default function Settings() {
   const { plan, refresh } = usePlan();
@@ -116,16 +128,57 @@ export default function Settings() {
   const handleExport = async () => {
     try {
       const payload = await buildBackupPayload();
-      const uri = `${FileSystem.cacheDirectory}hold-backup-${Date.now()}.json`;
-      await FileSystem.writeAsStringAsync(uri, JSON.stringify(payload, null, 2));
-      await Sharing.shareAsync(uri, { mimeType: 'application/json' });
-      await logInfo('Backup exported');
+
+      if (Platform.OS === 'web') {
+        // Web: download as file
+        const dataStr = JSON.stringify(payload, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `hold-backup-${Date.now()}.json`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        await logInfo('Backup exported (web)');
+        return;
+      }
+
+      if (FileSystem && Sharing) {
+        const uri = `${FileSystem.cacheDirectory}hold-backup-${Date.now()}.json`;
+        await FileSystem.writeAsStringAsync(uri, JSON.stringify(payload, null, 2));
+        await Sharing.shareAsync(uri, { mimeType: 'application/json' });
+        await logInfo('Backup exported');
+      }
     } catch (error) {
       await logError('Failed to export backup', error);
     }
   };
 
   const handleImport = async () => {
+    if (Platform.OS === 'web') {
+      // Web: use file input
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async (e) => {
+        const file = (e.target as HTMLInputElement).files?.[0];
+        if (!file) return;
+        try {
+          const content = await file.text();
+          const payload = JSON.parse(content);
+          await importBackup(payload);
+          await refresh();
+          await logInfo('Backup imported (web)');
+        } catch (error) {
+          await logError('Failed to import backup', error);
+        }
+      };
+      input.click();
+      return;
+    }
+
     Alert.alert('Import backup', 'This will replace the current data on this device.', [
       { text: 'Cancel', style: 'cancel' },
       {
@@ -133,6 +186,7 @@ export default function Settings() {
         style: 'destructive',
         onPress: async () => {
           try {
+            if (!DocumentPicker || !FileSystem) return;
             const result = await DocumentPicker.getDocumentAsync({ type: 'application/json' });
             if (result.canceled || !result.assets?.[0]?.uri) {
               return;
@@ -233,19 +287,51 @@ export default function Settings() {
           </View>
         </View>
 
-        <View className="mt-8">
+        <View className="mt-8 gap-3">
           <SectionHeader title="Diagnostics" subtitle="Quick access to logs." />
           <Button label="Open logs" variant="outline" onPress={() => router.push('/logs')} />
           <Button label="Clear Data" variant="outline" onPress={() => clearData()} />
         </View>
 
-        {picker ? (
+        {picker && Platform.OS !== 'web' && DateTimePicker ? (
           <DateTimePicker
             value={parseTimeToDate(picker === 'morning' ? plan.morningTime : plan.eveningTime)}
             mode="time"
             display="spinner"
             onChange={handleTimeChange}
           />
+        ) : null}
+
+        {picker && Platform.OS === 'web' ? (
+          <View className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+            <View className="rounded-xl bg-white p-6">
+              <AppText variant="subtitle" className="mb-4">
+                Set {picker} time
+              </AppText>
+              <input
+                type="time"
+                defaultValue={picker === 'morning' ? plan.morningTime : plan.eveningTime}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value) {
+                    handleTimeChange(
+                      { type: 'set', nativeEvent: {} },
+                      new Date(`2000-01-01T${value}:00`)
+                    );
+                  }
+                }}
+                style={{
+                  fontSize: 18,
+                  padding: 8,
+                  borderRadius: 8,
+                  border: '1px solid #ccc',
+                }}
+              />
+              <View className="mt-4">
+                <Button label="Cancel" variant="outline" onPress={() => setPicker(null)} />
+              </View>
+            </View>
+          </View>
         ) : null}
       </View>
     </Screen>
